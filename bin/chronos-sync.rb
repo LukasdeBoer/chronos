@@ -14,6 +14,7 @@ require 'set'
 options = OpenStruct.new
 options.update_from_chronos = false
 options.force = false
+options.delete_force = false
 options.validate = false
 options.delete_missing = false
 options.skip_sync = false
@@ -31,6 +32,9 @@ opts = OptionParser.new do |o|
   end
   o.on("-f", "--force", "Forcefully update data in Chronos from local configuration") do |t|
     options.force = true
+  end
+  o.on("-d", "--delete-force", "Delete data in Chronos without asking") do |t|
+    options.delete_force = true
   end
   o.on("-V", "--validate", "Validate jobs, don't do anything else. Overrides other options.") do |t|
     options.validate = true
@@ -112,7 +116,6 @@ def normalize_job(job)
   newjob.delete 'lastSuccess'
   newjob.delete 'lastError'
   newjob.delete 'errorsSinceLastSuccess'
-  newjob.delete 'disabled'
 
   # Define optional fields, if not present
   newjob['uris'] = [] if !newjob.include?('uris')
@@ -450,8 +453,8 @@ def check_if_defined(jobs, name, options)
   if !jobs.include?(name)
     if options.delete_missing
       $stdout.print "The job #{name} exists in chronos, but is not defined! "
-      $stdout.print "Delete [yN]? " unless options.force
-      delete_job(options, name) if (options.force || $stdin.gets.chomp.downcase == "y")
+      $stdout.print "Delete [yN]? " unless options.delete_force
+      delete_job(options, name) if (options.delete_force || $stdin.gets.chomp.downcase == "y")
     else
       $stderr.puts "The job #{name} exists in chronos, but is not defined!"
     end
